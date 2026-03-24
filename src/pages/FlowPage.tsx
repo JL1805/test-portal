@@ -6,11 +6,13 @@ import { useGeolocation } from '../hooks/useGeolocation';
 import { firmaService } from '../api/firmaService';
 import { FlowLayout } from '../components/layout/FlowLayout';
 import { WelcomeStep } from '../components/steps/WelcomeStep';
+import { DocumentInfoStep } from '../components/steps/DocumentInfoStep';
 import { WelcomeSkeleton } from '../components/ui/Skeleton';
 import { showToast } from '../components/ui/Toast';
 import { ErrorPage } from './ErrorPage';
 import { SuccessPage } from './SuccessPage';
-import type { CompletarPayload, StepId } from '../types';
+import { ReviewResultPage } from './ReviewResultPage';
+import type { CompletarPayload, CallCenterPayload, FlowType, StepId } from '../types';
 
 const LegalChecksStep = lazy(() =>
   import('../components/steps/LegalChecksStep').then((m) => ({ default: m.LegalChecksStep }))
@@ -27,6 +29,9 @@ const DocumentViewerStep = lazy(() =>
 const SignaturePadStep = lazy(() =>
   import('../components/steps/SignaturePadStep').then((m) => ({ default: m.SignaturePadStep }))
 );
+const DecisionStep = lazy(() =>
+  import('../components/steps/DecisionStep').then((m) => ({ default: m.DecisionStep }))
+);
 
 const StepSkeleton = () => (
   <div className="bg-white rounded-2xl shadow-lg border border-slate-100 p-6 space-y-4">
@@ -37,9 +42,13 @@ const StepSkeleton = () => (
   </div>
 );
 
-export function FlowPage() {
+interface FlowPageProps {
+  flowType: FlowType;
+}
+
+export function FlowPage({ flowType }: FlowPageProps) {
   const { uuid } = useParams<{ uuid: string }>();
-  const { cargando, error } = useFlowConfig(uuid);
+  const { cargando, error } = useFlowConfig(uuid, flowType);
   useGeolocation();
 
   const flowConfig = useFirmaStore((s) => s.flowConfig);
@@ -63,10 +72,12 @@ export function FlowPage() {
   const isFirstStep = pasoActual === 0;
   const isLastStep = pasoActual === pasosActivos.length - 1;
 
-  const handleNext = useCallback(async () => {
-    if (isLastStep && flowConfig) {
-      setCargando(true);
-      try {
+  const handleCompletar = useCallback(async () => {
+    if (!flowConfig) return;
+
+    setCargando(true);
+    try {
+      if (flowType === 'sign-all') {
         const payload: CompletarPayload = {
           checksAceptados,
           codigoOtp,
@@ -78,18 +89,36 @@ export function FlowPage() {
         await firmaService.completar(flowConfig.uuid, payload);
         setCompletado();
         showToast('Documento firmado exitosamente', 'success');
-      } catch {
-        showToast('Error al completar la firma. Intenta de nuevo.', 'error');
-      } finally {
-        setCargando(false);
+      } else if (flowType === 'call-center') {
+        const payload: CallCenterPayload = {
+          checksAceptados,
+          codigoOtp,
+          selfieBase64,
+          firmaBase64: firmaBase64 ?? '',
+          geolocalizacion,
+        };
+        await firmaService.completarCallCenter(flowConfig.uuid, payload);
+        setCompletado();
+        showToast('Documento firmado exitosamente', 'success');
       }
+      // For 'revisar' flow, completion is handled by DecisionStep directly
+    } catch {
+      showToast('Error al completar la firma. Intenta de nuevo.', 'error');
+    } finally {
+      setCargando(false);
+    }
+  }, [
+    flowType, flowConfig, setCargando, setCompletado,
+    checksAceptados, codigoOtp, selfieBase64, firmaBase64, documentosLeidos, geolocalizacion,
+  ]);
+
+  const handleNext = useCallback(async () => {
+    if (isLastStep && flowType !== 'revisar') {
+      await handleCompletar();
     } else {
       avanzarPaso();
     }
-  }, [
-    isLastStep, flowConfig, avanzarPaso, setCargando, setCompletado,
-    checksAceptados, codigoOtp, selfieBase64, firmaBase64, documentosLeidos, geolocalizacion,
-  ]);
+  }, [isLastStep, flowType, avanzarPaso, handleCompletar]);
 
   const handleBack = useCallback(() => {
     retrocederPaso();
@@ -100,6 +129,14 @@ export function FlowPage() {
   }
 
   if (completado) {
+    // For 'revisar' flow, show the review result page
+    if (flowType === 'revisar') {
+      return (
+        <FlowLayout showStepIndicator={false}>
+          <ReviewResultPage />
+        </FlowLayout>
+      );
+    }
     return (
       <FlowLayout showStepIndicator>
         <SuccessPage />
@@ -117,7 +154,8 @@ export function FlowPage() {
     );
   }
 
-  if (mostrarBienvenida) {
+  // Welcome screen (only for flows that have it)
+  if (mostrarBienvenida && flowType !== 'revisar') {
     return (
       <FlowLayout showStepIndicator>
         <WelcomeStep />
@@ -142,6 +180,10 @@ export function FlowPage() {
         return <DocumentViewerStep onNext={handleNext} {...backProps} />;
       case 'firma':
         return <SignaturePadStep onNext={handleNext} {...backProps} />;
+      case 'info_documento':
+        return <DocumentInfoStep onNext={handleNext} />;
+      case 'decision':
+        return <DecisionStep {...backProps} />;
       default:
         return null;
     }
@@ -149,8 +191,14 @@ export function FlowPage() {
 
   const currentStepId = pasoActualConfig?.id;
 
+  const getMaxWidth = () => {
+    if (currentStepId === 'firma') return '3xl';
+    if (currentStepId === 'visor_documentos') return '3xl';
+    return '2xl';
+  };
+
   return (
-    <FlowLayout showStepIndicator maxWidth={currentStepId === 'firma' ? 'xl' : 'md'}>
+    <FlowLayout showStepIndicator maxWidth={getMaxWidth()}>
       <Suspense fallback={<StepSkeleton />}>
         {renderStep()}
       </Suspense>

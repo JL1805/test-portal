@@ -87,10 +87,11 @@ export function BiometricStep({ onNext, onBack }: BiometricStepProps) {
           </div>
 
           {/* Video area */}
-          <div className="relative bg-black aspect-[3/4] max-h-[60vh]">
+          <div className="bg-black">
+          <div className="relative bg-black aspect-[3/4] max-h-[60vh] mx-auto">
             <video
               ref={videoRef}
-              className="w-full h-full object-cover"
+              className="absolute inset-0 w-full h-full object-cover"
               playsInline
               muted
               autoPlay
@@ -135,6 +136,7 @@ export function BiometricStep({ onNext, onBack }: BiometricStepProps) {
                 </Button>
               </div>
             )}
+          </div>
           </div>
 
           {/* Instructions + Controls */}

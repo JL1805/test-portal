@@ -188,7 +188,7 @@ export function LegalChecksStep({ onNext, onBack }: LegalChecksStepProps) {
             </div>
 
             {/* Footer del modal */}
-            <div className="border-t border-slate-100 px-5 py-4 space-y-2">
+            <div className="border-t border-slate-100 px-5 py-5">
               {checksAceptados.includes(selectedCheck.id) ? (
                 <div className="flex items-center gap-2 justify-center text-emerald-600 text-sm font-medium py-2">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5" aria-hidden="true">
@@ -197,22 +197,25 @@ export function LegalChecksStep({ onNext, onBack }: LegalChecksStepProps) {
                   Aceptado
                 </div>
               ) : (
-                <Button
-                  onClick={() => {
-                    toggleCheck(selectedCheck.id);
-                    setSelectedCheck(null);
-                  }}
-                >
-                  Aceptar término
-                </Button>
+                <div className="grid grid-cols-2 gap-3">
+                  <Button
+                    variant="secondary"
+                    fullWidth
+                    onClick={() => setSelectedCheck(null)}
+                  >
+                    Cerrar
+                  </Button>
+                  <Button
+                    fullWidth
+                    onClick={() => {
+                      toggleCheck(selectedCheck.id);
+                      setSelectedCheck(null);
+                    }}
+                  >
+                    Aceptar término
+                  </Button>
+                </div>
               )}
-              <button
-                type="button"
-                onClick={() => setSelectedCheck(null)}
-                className="w-full text-center text-sm text-slate-500 hover:text-slate-700 py-2 cursor-pointer"
-              >
-                Cerrar
-              </button>
             </div>
           </>
         )}

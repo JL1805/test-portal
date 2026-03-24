@@ -8,7 +8,7 @@ export const uuidSchema = z.string().regex(
 export const otpSchema = z.string().min(1, 'Código requerido');
 
 export const pasoConfigSchema = z.object({
-  id: z.enum(['checks_legales', 'otp', 'biometria', 'visor_documentos', 'firma']),
+  id: z.enum(['checks_legales', 'otp', 'biometria', 'visor_documentos', 'firma', 'info_documento', 'decision']),
   nombre: z.string(),
   orden: z.number(),
   habilitado: z.boolean(),

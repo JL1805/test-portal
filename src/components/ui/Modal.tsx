@@ -15,18 +15,22 @@ export function Modal({ isOpen, onClose, children, title }: ModalProps) {
   useEffect(() => {
     if (isOpen) {
       previousFocusRef.current = document.activeElement as HTMLElement;
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
       document.body.style.overflow = 'hidden';
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
 
       setTimeout(() => {
         contentRef.current?.focus();
       }, 50);
     } else {
       document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
       previousFocusRef.current?.focus();
     }
 
     return () => {
       document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
     };
   }, [isOpen]);
 
@@ -69,8 +73,7 @@ export function Modal({ isOpen, onClose, children, title }: ModalProps) {
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center animate-scaleIn"
-      style={{ backgroundColor: 'var(--color-overlay)' }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-white/90"
       onClick={(e) => {
         if (e.target === overlayRef.current) onClose();
       }}
@@ -82,8 +85,13 @@ export function Modal({ isOpen, onClose, children, title }: ModalProps) {
         aria-modal="true"
         aria-label={title}
         tabIndex={-1}
-        className="bg-white w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl max-h-[90vh] flex flex-col shadow-2xl focus:outline-none"
+        className="bg-white w-full max-w-md sm:max-w-lg lg:max-w-xl rounded-2xl max-h-[90vh] flex flex-col shadow-2xl focus:outline-none p-6 sm:p-8 mx-4 animate-scaleIn"
       >
+        {title && (
+          <h2 className="text-lg font-bold text-slate-800 mb-4 text-center">
+            {title}
+          </h2>
+        )}
         {children}
       </div>
     </div>

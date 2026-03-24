@@ -1,6 +1,15 @@
 // src/types/index.ts — Tipos centralizados del proyecto firmatest
 
-export type StepId = 'checks_legales' | 'otp' | 'biometria' | 'visor_documentos' | 'firma';
+export type FlowType = 'sign-all' | 'call-center' | 'revisar';
+
+export type StepId =
+  | 'checks_legales'
+  | 'otp'
+  | 'biometria'
+  | 'visor_documentos'
+  | 'firma'
+  | 'info_documento'
+  | 'decision';
 
 export interface PasoConfig {
   id: StepId;
@@ -42,9 +51,11 @@ export interface Empresa {
 
 export interface FlowConfig {
   uuid: string;
+  flowType: FlowType;
   cliente: Cliente;
   empresa: Empresa;
   documento_titulo: string;
+  documento_descripcion?: string;
   pasos: PasoConfig[];
   checks_legales: CheckLegal[];
   documentos: Documento[];
@@ -67,6 +78,20 @@ export interface CompletarPayload {
   geolocalizacion: GeolocalizacionData | null;
 }
 
+export interface CallCenterPayload {
+  checksAceptados: string[];
+  codigoOtp: string;
+  selfieBase64: string | null;
+  firmaBase64: string;
+  geolocalizacion: GeolocalizacionData | null;
+}
+
+export interface RevisarPayload {
+  decision: 'aceptado' | 'rechazado';
+}
+
+export type DecisionType = 'aceptado' | 'rechazado' | null;
+
 export type ErrorType =
   | 'uuid_invalido'
   | 'no_encontrado'
@@ -82,8 +107,16 @@ export interface AppError {
   reintentable: boolean;
 }
 
+export interface FlowRegistryEntry {
+  flowType: FlowType;
+  routePattern: string;
+  pasos: StepId[];
+  mostrarBienvenida: boolean;
+}
+
 export interface FirmaState {
   flowConfig: FlowConfig | null;
+  flowType: FlowType | null;
   pasoActual: number;
   mostrarBienvenida: boolean;
   checksAceptados: string[];
@@ -93,11 +126,13 @@ export interface FirmaState {
   firmaBase64: string | null;
   documentosLeidos: string[];
   geolocalizacion: GeolocalizacionData | null;
+  decision: DecisionType;
   cargando: boolean;
   error: AppError | null;
   completado: boolean;
 
   setFlowConfig: (config: FlowConfig) => void;
+  setFlowType: (type: FlowType) => void;
   comenzarFlujo: () => void;
   avanzarPaso: () => void;
   retrocederPaso: () => void;
@@ -110,6 +145,7 @@ export interface FirmaState {
   setFirma: (base64: string) => void;
   marcarDocumentoLeido: (id: string) => void;
   setGeolocalizacion: (geo: GeolocalizacionData | null) => void;
+  setDecision: (d: DecisionType) => void;
   setCargando: (c: boolean) => void;
   setError: (e: AppError | null) => void;
   setCompletado: () => void;

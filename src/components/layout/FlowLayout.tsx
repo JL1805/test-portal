@@ -4,10 +4,10 @@ import { useFirmaStore } from '../../store/firmaStore';
 interface FlowLayoutProps {
   children: React.ReactNode;
   showStepIndicator?: boolean;
-  maxWidth?: 'md' | 'lg' | 'xl';
+  maxWidth?: 'md' | 'lg' | 'xl' | '2xl' | '3xl';
 }
 
-export function FlowLayout({ children, showStepIndicator = true, maxWidth = 'md' }: FlowLayoutProps) {
+export function FlowLayout({ children, showStepIndicator = true, maxWidth = '3xl' }: FlowLayoutProps) {
   const pasoActual = useFirmaStore((s) => s.pasoActual);
   const flowConfig = useFirmaStore((s) => s.flowConfig);
 
@@ -32,12 +32,15 @@ export function FlowLayout({ children, showStepIndicator = true, maxWidth = 'md'
         />
       )}
       <main
-        className="flex-1 flex items-start sm:items-center justify-center p-4 sm:p-6 pb-safe"
+        className="flex-1 flex items-start sm:items-center justify-center p-4 sm:p-8 pb-safe"
         style={showBar ? { paddingTop: '6.5rem' } : undefined}
       >
         <div className={`w-full ${
-          maxWidth === 'xl' ? 'max-w-2xl' : maxWidth === 'lg' ? 'max-w-lg' : 'max-w-md'
-        }`}>
+          maxWidth === '3xl' ? 'max-w-3xl' :
+          maxWidth === '2xl' ? 'max-w-2xl' :
+          maxWidth === 'xl' ? 'max-w-xl' :
+          maxWidth === 'lg' ? 'max-w-lg' : 'max-w-md'
+        } mx-auto`}>
           {children}
         </div>
       </main>

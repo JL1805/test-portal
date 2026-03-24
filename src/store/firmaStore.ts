@@ -1,8 +1,9 @@
 import { create } from 'zustand';
-import type { FirmaState, FlowConfig, GeolocalizacionData, AppError, PasoConfig } from '../types';
+import type { FirmaState, FlowConfig, FlowType, GeolocalizacionData, AppError, PasoConfig, DecisionType } from '../types';
 
 const initialState = {
   flowConfig: null as FlowConfig | null,
+  flowType: null as FlowType | null,
   pasoActual: -1,
   mostrarBienvenida: true,
   checksAceptados: [] as string[],
@@ -12,6 +13,7 @@ const initialState = {
   firmaBase64: null as string | null,
   documentosLeidos: [] as string[],
   geolocalizacion: null as GeolocalizacionData | null,
+  decision: null as DecisionType,
   cargando: false,
   error: null as AppError | null,
   completado: false,
@@ -21,6 +23,8 @@ export const useFirmaStore = create<FirmaState>((set, get) => ({
   ...initialState,
 
   setFlowConfig: (config: FlowConfig) => set({ flowConfig: config, cargando: false }),
+
+  setFlowType: (type: FlowType) => set({ flowType: type }),
 
   comenzarFlujo: () => set({ mostrarBienvenida: false, pasoActual: 0 }),
 
@@ -72,6 +76,7 @@ export const useFirmaStore = create<FirmaState>((set, get) => ({
   },
 
   setGeolocalizacion: (geo: GeolocalizacionData | null) => set({ geolocalizacion: geo }),
+  setDecision: (d: DecisionType) => set({ decision: d }),
   setCargando: (c: boolean) => set({ cargando: c }),
   setError: (e: AppError | null) => set({ error: e }),
   setCompletado: () => set({ completado: true }),
